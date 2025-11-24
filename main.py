@@ -56,6 +56,56 @@ class SQLConnector:
         self.connection.close()
 
 
+class EditCoffeeWidget(QWidget):
+    def __init__(self, parent: CoffeeWidget, rowIndex: int):
+        super().__init__()
+        self.w_parent = parent
+        self.sql_conn = self.w_parent.sql_conn
+        self.rowIndex = rowIndex
+        try:
+            self.row = self.w_parent.rows[rowIndex]
+        except IndexError:
+            return 
+        self.initUI()
+
+    def initUI(self):
+        uic.loadUi(open("addEditCoffeeForm.ui", encoding="utf-8"), self)
+
+        self.titleEdit.setText(self.row[1])
+        self.roastingEdit.setText(self.row[2])
+        self.groundedEdit.setText(self.row[3])
+        self.tasteEdit.setText(self.row[4])
+        self.costEdit.setText(str(self.row[5]))
+        self.volumeEdit.setText(str(self.row[6]))
+        
+        self.addButton.setText("Сохранить")
+        self.addButton.clicked.connect(self.save_data)
+
+    def closeEvent(self, a0):
+        self.w_parent.on_close.disconnect(self.close)
+        return super().closeEvent(a0)
+
+    def save_data(self):
+        title = self.titleEdit.text()
+        roasting = self.roastingEdit.text()
+        grounded = self.groundedEdit.text()
+        taste = self.tasteEdit.text()
+        try:
+            cost = int(self.costEdit.text())
+            volume = int(self.volumeEdit.text())
+        except ValueError:
+            return
+        data = (self.rowIndex + 1, title, roasting, grounded, taste, cost, volume)
+        for c in range(self.w_parent.tableWidget.columnCount()):
+            item = QTableWidgetItem(str(data[c]), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            self.w_parent.tableWidget.setItem(self.rowIndex, c, item)
+        self.sql_conn.execute_without_response(f"UPDATE Beans SET title='{title}', roasting='{roasting}', \
+            grounded='{grounded}', taste='{taste}', cost={cost}, pack_volume={volume} WHERE id={self.rowIndex + 1}")
+        self.sql_conn.connection.commit()
+        self.w_parent.show_table()
+        self.close()
+
+
 class AddCoffeeWidget(QWidget):
     def __init__(self, parent: CoffeeWidget):
         super().__init__()
@@ -105,37 +155,36 @@ class CoffeeWidget(QWidget):
 
     def initUI(self):
         self.show_table()
-        self.addButton.clicked.connect(self.add_record)
-        self.tableWidget.cellChanged.connect(self.update_sql_with_table)
+        self.addButton.clicked.connect(self.add_row)
+        self.editButton.clicked.connect(lambda: self.edit_row(self.tableWidget.currentRow()))
 
     def show_table(self):
         cursor = self.sql_conn.connection.cursor()
-        rows = cursor.execute("SELECT * FROM Beans").fetchall()
+        self.rows = cursor.execute("SELECT * FROM Beans").fetchall()
         headers = ["ID", "Название сорта", "Степень прожарки", "Молотый/в зернах", "Описание вкуса", "Цена", "Объем упаковки"]
         self.tableWidget.clear()
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.setRowCount(len(rows))
+        self.tableWidget.setRowCount(len(self.rows))
         self.tableWidget.setColumnCount(len(headers))
         self.tableWidget.setHorizontalHeaderLabels(headers)
         self.coffies_count = 0
-        for r in range(len(rows)):
+        for r in range(len(self.rows)):
             self.coffies_count += 1
             for c in range(len(headers)):
-                item = QTableWidgetItem(str(rows[r][c]), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                item = QTableWidgetItem(str(self.rows[r][c]), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.tableWidget.setItem(r, c, item)
     
-    def add_record(self):
+    def add_row(self):
         self.widget = AddCoffeeWidget(self)
         self.widget.show()
         self.on_close.connect(self.widget.close)
-    
-    def update_sql_with_table(self, rowIndex, columnIndex):
-        row = []
-        for c in range(self.tableWidget.columnCount()):
-            row.append(self.tableWidget.item(rowIndex, c).text())
-        self.sql_conn.execute_without_response(f"UPDATE Beans SET title='{row[1]}', roasting='{row[2]}', \
-            grounded='{row[3]}', taste='{row[4]}', cost={row[5]}, pack_volume={row[6]} WHERE id={rowIndex + 1}")
-        self.sql_conn.connection.commit()
+
+    def edit_row(self, rowIndex):
+        if rowIndex == -1:
+            return
+        self.widget = EditCoffeeWidget(self, rowIndex)
+        self.widget.show()
+        self.on_close.connect(self.widget.close)
 
 
 if __name__ == '__main__':
