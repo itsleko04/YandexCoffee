@@ -9,7 +9,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_AddCoffeeWidget(object):
+class Ui_AddEditCoffeeWidget(QtWidgets.QWidget):
     def setupUi(self, AddCoffeeWidget):
         AddCoffeeWidget.setObjectName("AddCoffeeWidget")
         AddCoffeeWidget.resize(462, 342)

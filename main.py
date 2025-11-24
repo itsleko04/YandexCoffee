@@ -1,10 +1,12 @@
 import sqlite3
 import sys
 
-from PyQt6 import uic
+from UI.addEditCoffeeForm_ui import Ui_AddEditCoffeeWidget
+from UI.main_ui import Ui_CoffeeWidget
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QTableWidgetItem, QHeaderView, QTableWidget
+    QApplication, QWidget, QTableWidgetItem, QHeaderView
 )
 
 
@@ -56,7 +58,7 @@ class SQLConnector:
         self.connection.close()
 
 
-class EditCoffeeWidget(QWidget):
+class EditCoffeeWidget(Ui_AddEditCoffeeWidget):
     def __init__(self, parent: CoffeeWidget, rowIndex: int):
         super().__init__()
         self.w_parent = parent
@@ -69,7 +71,7 @@ class EditCoffeeWidget(QWidget):
         self.initUI()
 
     def initUI(self):
-        uic.loadUi(open("UI/addEditCoffeeForm.ui", encoding="utf-8"), self)
+        self.setupUi(self)
 
         self.titleEdit.setText(self.row[1])
         self.roastingEdit.setText(self.row[2])
@@ -106,7 +108,7 @@ class EditCoffeeWidget(QWidget):
         self.close()
 
 
-class AddCoffeeWidget(QWidget):
+class AddCoffeeWidget(Ui_AddEditCoffeeWidget):
     def __init__(self, parent: CoffeeWidget):
         super().__init__()
         self.w_parent = parent
@@ -114,7 +116,7 @@ class AddCoffeeWidget(QWidget):
         self.initUI()
 
     def initUI(self):
-        uic.loadUi(open("UI/addEditCoffeeForm.ui", encoding="utf-8"), self)
+        self.setupUi(self)
         self.addButton.clicked.connect(self.save_data)
 
     def closeEvent(self, a0):
@@ -137,7 +139,7 @@ class AddCoffeeWidget(QWidget):
         self.close()
 
 
-class CoffeeWidget(QWidget):
+class CoffeeWidget(Ui_CoffeeWidget):
     def __init__(self):
         super().__init__()
 
@@ -146,7 +148,7 @@ class CoffeeWidget(QWidget):
         self.coffies_count = 0
         self.sql_conn = SQLConnector("data/coffee.sqlite")
 
-        uic.loadUi(open("UI/main.ui", encoding="utf-8"), self)
+        self.setupUi(self)
         self.initUI()
 
     def closeEvent(self, a0):
