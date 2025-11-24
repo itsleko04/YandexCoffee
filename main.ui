@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>CoffeeWidget</class>
- <widget class="QWidget" name="Form">
+ <widget class="QWidget" name="CoffeeWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -14,6 +14,13 @@
    <string>CoffeeWidget</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QPushButton" name="addButton">
+     <property name="text">
+      <string>Добавить запись</string>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QTableWidget" name="tableWidget"/>
    </item>
