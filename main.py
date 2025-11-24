@@ -4,7 +4,7 @@ import sys
 from PyQt6 import uic
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QTableWidgetItem, QHeaderView
+    QApplication, QWidget, QTableWidgetItem, QHeaderView, QTableWidget
 )
 
 
@@ -81,9 +81,9 @@ class AddCoffeeWidget(QWidget):
             volume = int(self.volumeEdit.text())
         except ValueError:
             return
-        self.sql_conn.execute_without_response(
-            f"INSERT INTO Beans VALUES({self.w_parent.coffies_count + 1}, '{title}', '{roasting}', '{grounded}', '{taste}', {cost}, {volume})")
-        self.w_parent.update_table()
+        self.sql_conn.execute_without_response(f"INSERT INTO Beans VALUES({self.w_parent.coffies_count + 1}, \
+                                               '{title}', '{roasting}', '{grounded}', '{taste}', {cost}, {volume})")
+        self.w_parent.show_table()
         self.close()
 
 
@@ -104,10 +104,11 @@ class CoffeeWidget(QWidget):
         return super().closeEvent(a0)
 
     def initUI(self):
+        self.show_table()
         self.addButton.clicked.connect(self.add_record)
-        self.update_table()
+        self.tableWidget.cellChanged.connect(self.update_sql_with_table)
 
-    def update_table(self):
+    def show_table(self):
         cursor = self.sql_conn.connection.cursor()
         rows = cursor.execute("SELECT * FROM Beans").fetchall()
         headers = ["ID", "Название сорта", "Степень прожарки", "Молотый/в зернах", "Описание вкуса", "Цена", "Объем упаковки"]
@@ -127,6 +128,14 @@ class CoffeeWidget(QWidget):
         self.widget = AddCoffeeWidget(self)
         self.widget.show()
         self.on_close.connect(self.widget.close)
+    
+    def update_sql_with_table(self, rowIndex, columnIndex):
+        row = []
+        for c in range(self.tableWidget.columnCount()):
+            row.append(self.tableWidget.item(rowIndex, c).text())
+        self.sql_conn.execute_without_response(f"UPDATE Beans SET title='{row[1]}', roasting='{row[2]}', \
+            grounded='{row[3]}', taste='{row[4]}', cost={row[5]}, pack_volume={row[6]} WHERE id={rowIndex + 1}")
+        self.sql_conn.connection.commit()
 
 
 if __name__ == '__main__':
