@@ -69,7 +69,7 @@ class EditCoffeeWidget(QWidget):
         self.initUI()
 
     def initUI(self):
-        uic.loadUi(open("addEditCoffeeForm.ui", encoding="utf-8"), self)
+        uic.loadUi(open("UI/addEditCoffeeForm.ui", encoding="utf-8"), self)
 
         self.titleEdit.setText(self.row[1])
         self.roastingEdit.setText(self.row[2])
@@ -114,7 +114,7 @@ class AddCoffeeWidget(QWidget):
         self.initUI()
 
     def initUI(self):
-        uic.loadUi(open("addEditCoffeeForm.ui", encoding="utf-8"), self)
+        uic.loadUi(open("UI/addEditCoffeeForm.ui", encoding="utf-8"), self)
         self.addButton.clicked.connect(self.save_data)
 
     def closeEvent(self, a0):
@@ -144,9 +144,9 @@ class CoffeeWidget(QWidget):
         self.on_close = Event()
 
         self.coffies_count = 0
-        self.sql_conn = SQLConnector("coffee.sqlite")
+        self.sql_conn = SQLConnector("data/coffee.sqlite")
 
-        uic.loadUi(open("main.ui", encoding="utf-8"), self)
+        uic.loadUi(open("UI/main.ui", encoding="utf-8"), self)
         self.initUI()
 
     def closeEvent(self, a0):
