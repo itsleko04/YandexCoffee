@@ -58,6 +58,56 @@ class SQLConnector:
         self.connection.close()
 
 
+class CoffeeWidget(Ui_CoffeeWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.on_close = Event()
+
+        self.coffies_count = 0
+        self.sql_conn = SQLConnector("data/coffee.sqlite")
+
+        self.setupUi(self)
+        self.initUI()
+
+    def closeEvent(self, a0):
+        self.on_close.invoke()
+        return super().closeEvent(a0)
+
+    def initUI(self):
+        self.show_table()
+        self.addButton.clicked.connect(self.add_row)
+        self.editButton.clicked.connect(lambda: self.edit_row(self.tableWidget.currentRow()))
+
+    def show_table(self):
+        cursor = self.sql_conn.connection.cursor()
+        self.rows = cursor.execute("SELECT * FROM Beans").fetchall()
+        headers = ["ID", "Название сорта", "Степень прожарки", "Молотый/в зернах", "Описание вкуса", "Цена", "Объем упаковки"]
+        self.tableWidget.clear()
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget.setRowCount(len(self.rows))
+        self.tableWidget.setColumnCount(len(headers))
+        self.tableWidget.setHorizontalHeaderLabels(headers)
+        self.coffies_count = 0
+        for r in range(len(self.rows)):
+            self.coffies_count += 1
+            for c in range(len(headers)):
+                item = QTableWidgetItem(str(self.rows[r][c]), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.tableWidget.setItem(r, c, item)
+    
+    def add_row(self):
+        self.widget = AddCoffeeWidget(self)
+        self.widget.show()
+        self.on_close.connect(self.widget.close)
+
+    def edit_row(self, rowIndex):
+        if rowIndex == -1:
+            return
+        self.widget = EditCoffeeWidget(self, rowIndex)
+        self.widget.show()
+        self.on_close.connect(self.widget.close)
+
+
 class EditCoffeeWidget(Ui_AddEditCoffeeWidget):
     def __init__(self, parent: CoffeeWidget, rowIndex: int):
         super().__init__()
@@ -137,56 +187,6 @@ class AddCoffeeWidget(Ui_AddEditCoffeeWidget):
                                                '{title}', '{roasting}', '{grounded}', '{taste}', {cost}, {volume})")
         self.w_parent.show_table()
         self.close()
-
-
-class CoffeeWidget(Ui_CoffeeWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.on_close = Event()
-
-        self.coffies_count = 0
-        self.sql_conn = SQLConnector("data/coffee.sqlite")
-
-        self.setupUi(self)
-        self.initUI()
-
-    def closeEvent(self, a0):
-        self.on_close.invoke()
-        return super().closeEvent(a0)
-
-    def initUI(self):
-        self.show_table()
-        self.addButton.clicked.connect(self.add_row)
-        self.editButton.clicked.connect(lambda: self.edit_row(self.tableWidget.currentRow()))
-
-    def show_table(self):
-        cursor = self.sql_conn.connection.cursor()
-        self.rows = cursor.execute("SELECT * FROM Beans").fetchall()
-        headers = ["ID", "Название сорта", "Степень прожарки", "Молотый/в зернах", "Описание вкуса", "Цена", "Объем упаковки"]
-        self.tableWidget.clear()
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.setRowCount(len(self.rows))
-        self.tableWidget.setColumnCount(len(headers))
-        self.tableWidget.setHorizontalHeaderLabels(headers)
-        self.coffies_count = 0
-        for r in range(len(self.rows)):
-            self.coffies_count += 1
-            for c in range(len(headers)):
-                item = QTableWidgetItem(str(self.rows[r][c]), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                self.tableWidget.setItem(r, c, item)
-    
-    def add_row(self):
-        self.widget = AddCoffeeWidget(self)
-        self.widget.show()
-        self.on_close.connect(self.widget.close)
-
-    def edit_row(self, rowIndex):
-        if rowIndex == -1:
-            return
-        self.widget = EditCoffeeWidget(self, rowIndex)
-        self.widget.show()
-        self.on_close.connect(self.widget.close)
 
 
 if __name__ == '__main__':
