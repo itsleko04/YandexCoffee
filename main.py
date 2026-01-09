@@ -36,20 +36,19 @@ class SQLConnector:
     def __init__(self, database):
         self.database = database
         self.connect()
-        
-        self.connection.autocommit = True
+
         self.last_cursor = None
 
     def execute_with_response(self, query: str):
         cursor = self.connection.cursor()
         self.last_cursor = cursor
-        cursor.execute(query)
         return cursor.execute(query).fetchall()
 
     def execute_without_response(self, query: str):
         cursor = self.connection.cursor()
         self.last_cursor = cursor
         cursor.execute(query)
+        self.connection.commit()
 
     def connect(self):
         self.connection = sqlite3.connect(self.database)
